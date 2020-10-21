@@ -1,0 +1,67 @@
+---
+title: "Prediction Assignment Writeup"
+output: html_document
+---
+The goal of is to predict the manner in which they did the exercise. This is the "classe" variable in the training set. The variable "classe" contains 5 levels: A, B, C, D and E.
+
+```{r setup, include=FALSE}
+library(e1071);library(caret);
+library(lattice); library(RColorBrewer);
+library(ggplot2);  library(randomForest); 
+library(rpart); library(rpart.plot);library(rattle);
+
+```
+
+Getting and cleaning data
+
+```{r cars}
+set.seed(123)
+trainingset <- read.csv("pml-training.csv", na.strings=c("NA","#DIV/0!", ""))
+trainingset<-trainingset[,colSums(is.na(trainingset)) == 0]
+trainingset   <-trainingset[,-c(1:7)]
+testingset <- read.csv("pml-testing.csv", na.strings=c("NA","#DIV/0!", ""))
+testingset <-testingset[,colSums(is.na(testingset)) == 0]
+testingset <-testingset[,-c(1:7)]
+summary(trainingset); 
+summary(testingset);          
+traintrainset <- createDataPartition(y=trainingset$classe, p=0.7, list=FALSE)
+TraintSet <- trainingset[traintrainset, ] 
+TesttSet <- trainingset[-traintrainset, ]
+
+```
+
+Plot the Decision Tree, Test results on our TesttSet data set
+A plot of the outcome variable will allow us to see the frequency of each levels in the TraintSet data set and # compare one another.
+ 
+```{r 2, echo=FALSE}
+plot(TraintSet$classe, main="Classe Levels within the TraintSet data set", xlab="classe", ylab="Frequency")
+
+model1 <- rpart(classe ~ ., data=TraintSet, method="class")
+fancyRpartPlot(model1)
+model2 <- randomForest(classe ~. , data=TraintSet, method="class")
+
+prediction1 <- predict(model1, TesttSet, type = "class")
+prediction2 <- predict(model2, TesttSet, type = "class")
+
+rpart.plot(model1, main="Classification Tree", extra=102, under=TRUE, faclen=0)
+
+ 
+confusionMatrix(prediction1, TesttSet$classe)
+confusionMatrix(prediction2, TesttSet$classe)
+
+```
+
+
+Accuracy for Random Forest model was 0.995 (95% CI: (0.993, 0.997)) compared to Decision Tree model with 0.739 (95% CI: (0.727, 0.752)). Random Forest algorithm performed better than Decision Trees.  The expected out-of-sample error is estimated at 0.005.Random forests yielded a better prediction so when applied on the Testing dataset to predict 20 different test cases:
+```{r}
+
+predictfinal <- predict(model2, testingset, type="class")
+predictfinal
+```
+
+ 
+ 
+ 
+ 
+ 
+ 
